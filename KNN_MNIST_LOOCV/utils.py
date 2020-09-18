@@ -1,6 +1,9 @@
 import os 
 import cv2 
 import numpy as np 
+import random 
+import matplotlib.pyplot as plt 
+from mpl_toolkits.mplot3d import Axes3D
 
 class reader :
     def read_data( path, to_gray = True):
@@ -60,8 +63,8 @@ class on_image :
 
     def preprocess(images):
         binarized = on_image.binarize(images) 
-        cleared = on_image.clear(binarized) 
-        flattened = on_image.flatten(cleared) 
+        cleared = on_image.clear(binarized)  
+        flattened = on_image.flatten(cleared)  
         return flattened, cleared
 
 
@@ -113,3 +116,23 @@ class KNN:
         distances = sorted(distances, key = lambda item : item[1])[:k] 
         result = KNN.count_votes(distances) 
         return result 
+
+
+
+
+
+def visualize(data, labels):
+
+    fig = plt.figure(1, figsize = (10,7))
+    ax = Axes3D(fig, rect = [0,0,1,1], elev =48, azim = 134)
+
+    xs, ys, zs = [], [], [] 
+    for d in data : 
+        xs.append(d[0])
+        ys.append(d[1]) 
+        zs.append(d[2])
+
+    
+    ax.scatter(xs, ys, zs, c=labels)
+
+    plt.show()
