@@ -64,10 +64,10 @@ class on_image :
 
     def preprocess(images):
         medianed = on_image.median(images) 
-        binarized = on_image.binarize(medianed, threshold = 100)
-        cropped = on_image.crop(binarized)
+        #binarized = on_image.binarize(medianed, threshold = 100)
+        cropped = on_image.crop(medianed)
         flattened = on_image.flatten(cropped) 
-        return flattened, binarized
+        return flattened 
 
     def crop(images):
 
@@ -101,10 +101,7 @@ class on_image :
 class distance:
 
     def euclidean2(v1, v2):
-        dist = 0 
-        for p1, p2 in zip(v1, v2):
-            dist += (p1-p2)**2
-        return np.sqrt(dist) 
+        return np.sqrt(np.sum((v1-v2)**2)) 
 
     def euclidean(v1, v2):
         return np.linalg.norm((v1-v2))
@@ -123,12 +120,11 @@ class KNN:
         data = dataset[0] 
         labels = dataset[1] 
 
-
-
         all_distances = [] 
-        for i in range(len(data)):
-            target = data[i]
-            distances = [(label, dist_func(target, newdata)) for label, newdata in zip(labels, data[:i] + data[i+1:])]
+        for i in range(data.shape[0]):
+            target = data[i,:] 
+            remaining = np.concatenate((data[:i,:], data[i+1:, :]), axis=0) 
+            distances = [(label, dist_func(target, newdata)) for label, newdata in zip(labels, remaining)]
             distances = sorted(distances, key = lambda item : item[1])
             all_distances.append(distances) 
          
@@ -136,7 +132,7 @@ class KNN:
         for k in k_range:
             accuracy = sum([labels[i]==KNN.count_votes(all_distances[i][:k]) for i in range(len(data))]) / len(labels) * 100
             accuracies.append(accuracy) 
-            print(accuracy)
+            print("k value:{} accuracy:{}".format(k, accuracy) )
         return all_distances
 
     def predict(dataset, target, k, dist_func):
