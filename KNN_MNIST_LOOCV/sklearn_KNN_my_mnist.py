@@ -19,7 +19,6 @@ print("training points:", len(train_y))
 print("testing points:", len(test_y)) 
 
 
-
 # initialize the values of k for our k-Nearest Neighbor classifier along with the
 # list of accuracies for each value of k
 kVals = range(1, 30, 2)
@@ -50,3 +49,4 @@ predictions = model.predict(flat_test_x)
 # for each of the digits
 print("EVALUATION ON TESTING DATA")
 print(classification_report(test_y, predictions))
+

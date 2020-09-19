@@ -22,6 +22,7 @@ test_path = r"C:\Users\gad\Downloads\Computer RA Task\Computer RA Task\Task Data
 if __name__ == "__main__":
     
     images, labels = reader.read(dir = test_path, labels_file = 'Test Labels.txt')
-    images = on_image.median(images) 
-    
-    no_image.show(images[0])
+
+    for i in range(10):
+        print(labels[i])
+        on_image.show(images[i])

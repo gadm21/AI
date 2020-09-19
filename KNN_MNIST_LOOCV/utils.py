@@ -6,12 +6,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 class reader :
-    def read_data( path, to_gray = True):
-        names = os.listdir(path)
+    def read_data( path, names, to_gray = True): 
         data = [] 
         sizes = []
-        for name in names :
-            if name.endswith('txt') : continue 
+        for name in names : 
             image = cv2.imread(os.path.join(path, name)) 
             if to_gray : image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  
             data.append(image)  
@@ -24,7 +22,10 @@ class reader :
         return list(map(int, raw.split()))
 
     def read(dir, labels_file):
-        data =  reader.read_data(dir) 
+        if 'Train' in labels_file : names = ['N'+str(i)+'.jpg' for i in range(1,2401)]
+        else : names = ['N'+str(i)+'.jpg' for i in range(1, 201)]
+
+        data =  reader.read_data(dir, names) 
         labels = reader.read_labels(os.path.join(dir, labels_file))  
         return data, labels
 
@@ -49,10 +50,10 @@ class on_image :
         result = [] 
 
         def check(p):
-            return p.sum() > (255*p.shape[0] )
+            return p.sum() > (0.5 *255*p.shape[0]*p.shape[1] )
 
         for image in images :
-            newimage = np.zeros(image.shape) 
+            newimage = np.zeros(image.shape, dtype = np.uint8) 
             for row in range(k//2, image.shape[0] - k//2):
                 for col in range(k//2, image.shape[1] - k//2):
                     if check(image[ row-(k//2):row+(k//2)+1, col-(k//2):col+(k//2)+1]):
@@ -62,10 +63,39 @@ class on_image :
         return result
 
     def preprocess(images):
-        binarized = on_image.binarize(images) 
-        cleared = on_image.clear(binarized)  
-        flattened = on_image.flatten(cleared)  
-        return flattened, cleared
+        medianed = on_image.median(images) 
+        binarized = on_image.binarize(medianed, threshold = 100)
+        cropped = on_image.crop(binarized)
+        flattened = on_image.flatten(cropped) 
+        return flattened, binarized
+
+    def crop(images):
+
+        newimages= []
+        for image in images : 
+            nz_y, nz_x= np.nonzero(image)[0], np.nonzero(image)[1]
+            newimage = image[min(nz_y): max(nz_y),min(nz_x):max(nz_y)]
+            newimage = cv2.resize(newimage, image.shape).astype(np.uint8)
+            newimages.append(newimage) 
+        return newimages
+
+    def median(images, k=3):
+        def med(p):
+            newp = np.sort(np.reshape(p, p.shape[0]*p.shape[1]))
+            return newp[newp.shape[0]//2]
+
+        newimages = [] 
+        for image in images:
+            newimage = np.zeros(image.shape, dtype = np.uint8) 
+            for row in range(k//2, image.shape[0]-k//2):
+                for col in range(k//2, image.shape[1]-k//2):
+                    newimage[row, col] = med(image[row-(k//2):row+(k//2)+1, col-(k//2):col+(k//2)+1])
+            newimages.append(newimage) 
+        return newimages
+
+    def show_many(many_images):
+        all = np.hstack(many_images) 
+        on_image.show(all)
 
 
 class distance:

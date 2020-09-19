@@ -16,16 +16,21 @@ train_x, train_y = reader.read(dir = train_path, labels_file = 'Training Labels.
 flat_train_x, clear_train = on_image.preprocess(train_x) 
  
 
-pca_components = 90
-pca = decomposition.PCA(pca_components)
-pca.fit(flat_train_x) 
-pca_train_x = pca.transform(flat_train_x)
-pca_test_x = pca.transform(flat_test_x)  
+pca_values = range(3, 200, 3)
+k_values = range(1, 20, 2)
+for pca_value in pca_values:
+    accuracies = []
+    for k_value in k_values:
 
+        pca = decomposition.PCA(pca_value)
+        pca.fit(flat_train_x) 
+        pca_train_x = pca.transform(flat_train_x)
+        pca_test_x = pca.transform(flat_test_x)  
 
-k = 7 
-model = KNeighborsClassifier(n_neighbors=k)
-model.fit(pca_train_x, train_y)
+        model = KNeighborsClassifier(n_neighbors=k_value)
+        model.fit(pca_train_x, train_y)
 
-score = model.score(pca_test_x, test_y)  
-print("score:", score)
+        score = model.score(pca_test_x, test_y) 
+        accuracies.append(score) 
+    i = np.argmax(accuracies)
+    print(" pca value:{} and k value:{} gives max score of:{}".format(pca_value, k_values[i], accuracies[i]))
