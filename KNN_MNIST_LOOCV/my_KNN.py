@@ -20,8 +20,11 @@ flat_train_x = on_image.preprocess(train_x)
 
 pca = decomposition.PCA(50)
 pca.fit(flat_train_x) 
-pca_train_x = pca.transform(flat_train_x)
-pca_test_x = pca.transform(flat_test_x)  
+pca_train_x = list(pca.transform(flat_train_x))
+pca_test_x = list(pca.transform(flat_test_x)  )
 
-k_values = np.arange(1,7)
-KNN.LOOCV((pca_train_x, train_y), distance.euclidean2, k_values)
+
+k_values = [1]
+matrix = KNN.LOOCV((pca_test_x, test_y), distance.euclidean2, k_values)
+
+visualize.plot_confusion_matrix(matrix.astype(np.uint8))  

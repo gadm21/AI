@@ -100,12 +100,15 @@ class on_image :
 
 class distance:
 
-    def euclidean2(v1, v2):
-        return np.sqrt(np.sum((v1-v2)**2)) 
+    def euclidean2(v1, v2): 
+        total_squared_dist = np.sum((v1-v2)**2)
+        return np.sqrt(total_squared_dist) 
 
     def euclidean(v1, v2):
         return np.linalg.norm((v1-v2))
 
+    def MAE(v1, v2):
+        return np.sum(np.abs(v1-v2)) / v1.shape[0]
 class KNN:
 
     def count_votes(votes):
@@ -119,21 +122,24 @@ class KNN:
     def LOOCV(dataset, dist_func, k_range):
         data = dataset[0] 
         labels = dataset[1] 
+        sz = len(data)
 
         all_distances = [] 
-        for i in range(data.shape[0]):
-            target = data[i,:] 
-            remaining = np.concatenate((data[:i,:], data[i+1:, :]), axis=0) 
+        for i in range(sz):
+            target = data[i]
+            remaining = data[:i]+ data[i+1:]  
             distances = [(label, dist_func(target, newdata)) for label, newdata in zip(labels, remaining)]
             distances = sorted(distances, key = lambda item : item[1])
             all_distances.append(distances) 
          
         accuracies = [] 
         for k in k_range:
-            accuracy = sum([labels[i]==KNN.count_votes(all_distances[i][:k]) for i in range(len(data))]) / len(labels) * 100
+            predictions = [KNN.count_votes(all_distances[i][:k]) for i in range(sz)]
+            accuracy = sum([labels[i]==KNN.count_votes(all_distances[i][:k]) for i in range(sz)]) / sz * 100
             accuracies.append(accuracy) 
             print("k value:{} accuracy:{}".format(k, accuracy) )
-        return all_distances
+            return KNN.confusion_matrix(predictions, labels)
+        
 
     def predict(dataset, target, k, dist_func):
         data = dataset[0] 
@@ -144,21 +150,40 @@ class KNN:
         return result 
 
 
+    def confusion_matrix(predictions, labels):
+        size = len(np.unique(labels)) + 1 #add one to write labels, up and left, in the confusion matrix picture
+        cm = np.zeros((size, size), dtype = np.uint8) 
+        for i in range(len(labels)):
+            cm[labels[i]+1, predictions[i]+1] += 1
+
+        return cm 
 
 
 
-def visualize(data, labels):
+class visualize:
+    def plot_confusion_matrix(cm):
+        viewable = ((cm - np.min(cm)) / (np.max(cm) - np.min(cm)) ) * 255
+        viewable = viewable.astype(np.uint8)  
+        viewable = cv2.resize(viewable, (500,500), interpolation = cv2.INTER_NEAREST)
 
-    fig = plt.figure(1, figsize = (10,7))
-    ax = Axes3D(fig, rect = [0,0,1,1], elev =48, azim = 134)
+        for i in range(2, 12):
+            offset = i * 45
+            viewable = cv2.putText(viewable, str(i-2), (offset - 22,30), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, cv2.LINE_AA)
+            viewable = cv2.putText(viewable, str(i-2), (10,offset - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, cv2.LINE_AA)
+        on_image.show(viewable) 
 
-    xs, ys, zs = [], [], [] 
-    for d in data : 
-        xs.append(d[0])
-        ys.append(d[1]) 
-        zs.append(d[2])
+    def plot3D(data, labels):
 
-    
-    ax.scatter(xs, ys, zs, c=labels)
+        fig = plt.figure(1, figsize = (10,7))
+        ax = Axes3D(fig, rect = [0,0,1,1], elev =48, azim = 134)
 
-    plt.show()
+        xs, ys, zs = [], [], [] 
+        for d in data : 
+            xs.append(d[0])
+            ys.append(d[1]) 
+            zs.append(d[2])
+
+        
+        ax.scatter(xs, ys, zs, c=labels)
+
+        plt.show()
