@@ -1,9 +1,11 @@
 import os 
 import cv2 
 import numpy as np 
+import pandas as pd
 import random 
 import matplotlib.pyplot as plt 
 from mpl_toolkits.mplot3d import Axes3D
+import seaborn as sn
 
 class reader :
     def read_data( path, names, to_gray = True): 
@@ -138,7 +140,7 @@ class KNN:
             accuracy = sum([labels[i]==KNN.count_votes(all_distances[i][:k]) for i in range(sz)]) / sz * 100
             accuracies.append(accuracy) 
             print("k value:{} accuracy:{}".format(k, accuracy) )
-            return KNN.confusion_matrix(predictions, labels)
+            return KNN.my_confusion_matrix(predictions, labels), predictions
         
 
     def predict(dataset, target, k, dist_func):
@@ -150,7 +152,7 @@ class KNN:
         return result 
 
 
-    def confusion_matrix(predictions, labels):
+    def my_confusion_matrix(predictions, labels):
         size = len(np.unique(labels)) + 1 #add one to write labels, up and left, in the confusion matrix picture
         cm = np.zeros((size, size), dtype = np.uint8) 
         for i in range(len(labels)):
@@ -160,8 +162,9 @@ class KNN:
 
 
 
+
 class visualize:
-    def plot_confusion_matrix(cm):
+    def plot_my_confusion_matrix(cm):
         viewable = ((cm - np.min(cm)) / (np.max(cm) - np.min(cm)) ) * 255
         viewable = viewable.astype(np.uint8)  
         viewable = cv2.resize(viewable, (500,500), interpolation = cv2.INTER_NEAREST)
@@ -185,5 +188,16 @@ class visualize:
 
         
         ax.scatter(xs, ys, zs, c=labels)
+
+        plt.show()
+
+
+    def pro_confusion_matrix(predictions, labels):
+        pd_labels = pd.Series(labels, name='true') 
+        pd_pred = pd.Series(predictions, name='predictions')
+        cm = pd.DataFrame(pd.crosstab(pd_labels, pd_pred))
+
+        plt.figure() 
+        sn.heatmap(cm, annot= True)
 
         plt.show()

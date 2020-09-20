@@ -25,6 +25,7 @@ pca_test_x = list(pca.transform(flat_test_x)  )
 
 
 k_values = [1]
-matrix = KNN.LOOCV((pca_test_x, test_y), distance.euclidean2, k_values)
+matrix, predictions = KNN.LOOCV((pca_test_x, test_y), distance.euclidean2, k_values)
 
-visualize.plot_confusion_matrix(matrix.astype(np.uint8))  
+visualize.pro_confusion_matrix(predictions, test_y)
+#visualize.plot_confusion_matrix(matrix.astype(np.uint8))  
