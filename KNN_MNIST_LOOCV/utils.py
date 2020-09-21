@@ -5,6 +5,7 @@ import pandas as pd
 import random 
 import matplotlib.pyplot as plt 
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
 import seaborn as sn
 
 class reader :
@@ -175,19 +176,16 @@ class visualize:
             viewable = cv2.putText(viewable, str(i-2), (10,offset - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, cv2.LINE_AA)
         on_image.show(viewable) 
 
-    def plot3D(data, labels):
+    def plot3D(data, labels, scat=True):
 
         fig = plt.figure(1, figsize = (10,7))
-        ax = Axes3D(fig, rect = [0,0,1,1], elev =48, azim = 134)
+        ax = fig.add_subplot(111, projection='3d') 
 
-        xs, ys, zs = [], [], [] 
-        for d in data : 
-            xs.append(d[0])
-            ys.append(d[1]) 
-            zs.append(d[2])
-
+        xs, ys, zs = data[0], data[1], data[2]
+        if scat : ax.scatter(xs, ys, zs)
+        else : ax.plot_trisurf(xs, ys, zs)
         
-        ax.scatter(xs, ys, zs, c=labels)
+        ax.set(xlabel='P value', ylabel='K value', zlabel='model accuracy') 
 
         plt.show()
 

@@ -16,9 +16,12 @@ train_x, train_y = reader.read(dir = train_path, labels_file = 'Training Labels.
 flat_train_x = on_image.preprocess(train_x) 
  
 
-pca_values = range(3, 300, 3)
-k_values = range(1, 15)
-results = []
+pca_values = range(3, 700, 3)
+k_values = range(1,16, 2)
+
+record_pca = []
+record_k = [] 
+record_score = [] 
 
 for pca_value in pca_values :
     for k_value in k_values : 
@@ -29,6 +32,17 @@ for pca_value in pca_values :
 
         model = KNeighborsClassifier(n_neighbors=k_value)
         model.fit(pca_train_x, train_y)
+        score = model.score(pca_test_x, test_y)  
 
-        score = model.score(pca_test_x, test_y) 
-        results.append((score, k_value, pca_value)) 
+        record_pca.append(pca_value) 
+        record_k.append(k_value) 
+        record_score.append(score) 
+    print("done pca value:{}".format(pca_value))
+
+visualize.plot3D((record_pca, record_k, record_score), [0]*len(record_pca), scat = False)
+
+
+print("done") 
+
+winner = np.argmax(record_score) 
+print("max accuracy {} at p:{} and k:{}".format(record_score[winner], record_pca[winner], record_k[winner]))
