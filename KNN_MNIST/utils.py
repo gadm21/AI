@@ -114,6 +114,18 @@ class distance:
         return np.sum(np.abs(v1-v2)) / v1.shape[0]
 class KNN:
 
+    def classifier(k, data, labels, distance_function):
+
+        def evaluate(newdata, newlabels):
+            total = len(newdata) 
+            correct = 0
+            for d, l in zip(newdata, newlabels):
+                p = KNN.predict((data,labels), d, k, distance_function) 
+                if p==l : correct += 1
+            return correct/total
+
+        return evaluate
+
     def count_votes(votes):
         counts = dict() 
         for vote in votes : 
@@ -134,14 +146,15 @@ class KNN:
             distances = [(label, dist_func(target, newdata)) for label, newdata in zip(labels, remaining)]
             distances = sorted(distances, key = lambda item : item[1])
             all_distances.append(distances) 
-         
-        accuracies = [] 
+        
+        all_predictions = []
         for k in k_range:
             predictions = [KNN.count_votes(all_distances[i][:k]) for i in range(sz)]
+            all_predictions.append(predictions)
+
             accuracy = sum([labels[i]==KNN.count_votes(all_distances[i][:k]) for i in range(sz)]) / sz * 100
-            accuracies.append(accuracy) 
             print("k value:{} accuracy:{}".format(k, accuracy) )
-            return KNN.my_confusion_matrix(predictions, labels), predictions
+        return all_predictions
         
 
     def predict(dataset, target, k, dist_func):

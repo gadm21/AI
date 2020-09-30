@@ -42,7 +42,6 @@ for pca_value in pca_values :
 visualize.plot3D((record_pca, record_k, record_score), [0]*len(record_pca), scat = False)
 
 
-print("done") 
 
 winner = np.argmax(record_score) 
 print("max accuracy {} at p:{} and k:{}".format(record_score[winner], record_pca[winner], record_k[winner]))
