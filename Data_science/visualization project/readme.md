@@ -4,7 +4,9 @@
 
 ## Dataset
 
-> Provide basic information about your dataset in this section. If you selected your own dataset, make sure you note the source of your data and summarize any data wrangling steps that you performed before you started your exploration.
+> This is the exploration notebook of the PISA2012 dataset. PISA is an education assessment dataset based on survey's on students, parents and teachers. The dataset is huge, but in this analysis, I do a lot of cleaning to focus only on the features relevant to the questions of interest.
+
+> The original PISA2012 dataset contains 485490 records and 636 features. After removing irrelevant features and merging parents' qualifications, study time, and subjects' scores, the clean dataset has 129199 records and 9 features.
 
 
 ## Summary of Findings
