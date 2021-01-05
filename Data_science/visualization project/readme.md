@@ -1,5 +1,5 @@
-# (Dataset Exploration Title)
-## by (your name here)
+# PISA 2012 analysis
+## by Gad Mohamed 
 
 
 ## Dataset
@@ -11,9 +11,22 @@
 
 ## Summary of Findings
 
-> Summarize all of your findings from your exploration here, whether you plan on bringing them into your explanatory presentation or not.
+> After cleaning the dataset and extracting only relevant features, I found:
+
+1. Although students' scores were increasing linearly with parents' qualifications, scores start to decrease at very high qualifications. May be this is a signal that highly qualified parents are busy caring about their children.
+
+2. A perfect linear relationship between mothers' and fathers' educational qualifications i.e. parents usually have similar educational background
+
+3. Surprisingly, average study time of students didn't have much influence on their grades, which might suggest a problem in this dataset or the process of collecting its records.
 
 
 ## Key Insights for Presentation
 
-> Select one or two main threads from your exploration to polish up for your presentation. Note any changes in design from your exploration step here.
+> In the presentation, I go through the most informative plots that clearly conveys my findings. Particularly, I visualize the following relationships:
+
+1. Parents' qualifications vs students' grades
+
+2. Fathers' vs Mothers' educational qualifications
+
+3. Students' grades relation with parents' qualifications and studying time ( using heatmap) 
+
