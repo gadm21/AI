@@ -8,6 +8,10 @@ from botocore.exceptions import ClientError
 
 
 bucket_name = 'randomfirstbucket'
+train_prefix = 'Input/train/'
+val_prefix = 'Input/val/'
+train_bucket_prefix = bucket_name + '/' + train_prefix 
+val_bucket_prefix = bucket_name + '/' + val_prefix 
 
 zipped_data = r'C:\Users\gad\Desktop\repos\AI\aws\data\dataset.zip'
 input_data_dir = r'C:\Users\gad\Desktop\repos\AI\aws\data\input'
@@ -24,7 +28,8 @@ def extract_files(src_file, dst_dir):
 
 
 def read_manifest(file):
-    pass
+    with open(file, 'r') as f :
+        return f.read()
 
 
 
@@ -50,3 +55,9 @@ def create_dir(bucket_name, dir_name):
     bucket = s3_resource.Bucket(bucket_name)
     status = bucket.new_key(dir_name)
     return status
+
+def get_contents(bucket):
+    s3 = boto3.client('s3')
+    bucket = s3.list_objects(Bucket = bucket_name)
+    contents = [file['Key'] for file in bucket['Contents']]
+    return contents
