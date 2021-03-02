@@ -26,10 +26,10 @@ class GTransformer(nn.Module):
         self.token_embedding = nn.Embedding(embedding_dim = config['emb'], num_embeddings = self.num_tokens)
         self.pos_embedding = nn.Embedding(embedding_dim = config['emb'], num_embeddings= config['seq_length'])
 
-        self.unify_embeddings = nn.Linear(2*confg['emb'], confg['emb'])
+        self.unify_embeddings = nn.Linear(2*config['emb'], config['emb'])
 
         tBlocks = []
-        for i in range(confg['depth']):
+        for i in range(config['depth']):
             tBlocks.append(TransformerBlock(config)) 
 
         self.tBlocks = nn.Sequential(*tBlocks)
