@@ -18,10 +18,10 @@ style.use("ggplot")
 
 
 SIZE = 10
-allow_show = False
+allow_show = True
 
 action_space = 4
-episodes = 100000
+episodes = 10000
 
 move_penalty = -1
 enemy_penalty = -300
