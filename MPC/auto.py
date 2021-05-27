@@ -1,27 +1,31 @@
+import matplotlib.pyplot as plt
+import numpy as np
 
-from utils import *
+num_rows = 10
+num_cols = 1
+colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+labels = ["Label {}".format(i+1) for i in range(num_rows)]
 
-
-
-
-
-## prediction horizen ##
-P = 10
-acc_offest = P
-## init geuss ##
-# two variables for every time step. In every optimization step, the algorithm decides P decisions
-# in the future where only the dicision for the first step is used and then the optimization is 
-# called again to predict the next P steps in the future and so on.
-x0 = np.zeros(2*P) 
+def myplot(i, ax):
+    ax.plot(np.arange(10), np.arange(10)**i, color=colors[i])
+    ax.set_ylabel(labels[i])
 
 
+fig, axs = plt.subplots(num_rows, num_cols, sharex=True)
+for i in range(num_rows):
+     myplot(i, axs[i])
 
 
-## input bounds ##
-b1 = (-1.22, 1.22)  # steering bounds
-b2 = (0.0, 1.0)   # acceleration bounds
-bnds = tuple([b1]*P+[b2]*P)
-# bnds = (b1,b1,b1,b1,b1,b1,b1,b1,b1,b1,b2,b2,b2,b2,b2,b2,b2,b2,b2,b2)
+def on_click(event):
+    axes = event.inaxes
+    print("axes:", axes)
+    if not axes: return
+    inx = list(fig.axes).index(axes)
+    fig2 = plt.figure()
+    ax = fig2.add_subplot(111)
+    myplot(inx, ax)
+    fig2.show()
 
+fig.canvas.mpl_connect('button_press_event', on_click)
 
-print(bnds)
+plt.show()

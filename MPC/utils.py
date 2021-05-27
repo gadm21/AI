@@ -9,6 +9,7 @@ from numpy.lib.twodim_base import triu_indices_from
 from scipy.optimize import minimize, differential_evolution
 from matplotlib.pyplot import figure
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from datetime import datetime
 
 
@@ -23,7 +24,7 @@ class CUtils(object):
 
 
 
-class state:
+class State:
     def __init__(self, path = None, X=0, Y=0, th=0, V=0, deg = True):
         self.x = X
         self.y = Y
@@ -52,8 +53,8 @@ class state:
         return cte, eth
 
     def __str__(self):
-        return "x:{:.2f}  y:{:.2f}   th:{:.2f}   v:{:.2f}    cte:{:.2f}   eth:{:.2f}"\
-            .format(self.x, self.y, self.th, self.v, self.cte, self.eth) 
+        return "x:{:.2f}  y:{:.2f}   th(deg):{:.2f}   v:{:.2f}    cte:{:.2f}   eth:{:.2f}"\
+            .format(self.x, self.y, self.rad2deg(self.th), self.v, self.cte, self.eth) 
 
 
 
@@ -64,6 +65,15 @@ class inputs:
         self.accelartion = accelartion
 
 
+    
+def rad2deg( rad):
+    deg = rad * 180 / np.pi
+    return deg
+
+def deg2rad(deg):
+    rad = deg * np.pi / 180
+    return rad
+
 
 
 def model(inputs, init_state, coff, dt = 0.1, L = 3):
@@ -73,7 +83,7 @@ def model(inputs, init_state, coff, dt = 0.1, L = 3):
         rad = deg * np.pi / 180
         return rad
 
-    final_state = state()
+    final_state = State()
 
     ## find the final satte after dt of time ###
     final_state.x  = init_state.x  + init_state.v*np.cos(init_state.th)*dt
@@ -99,7 +109,7 @@ class Controller2D(object):
         self.state = initial_state
         self.add_delay = False
 
-        self.desired_speed      = 15
+        self.desired_speed      = 10
 
         self.timestamp  = 0
         self.throttle       = 0
@@ -113,11 +123,24 @@ class Controller2D(object):
     def __str__(self):
         
         return "Controller state :: " + str(self.state) + "  " + \
-            "throttle:{:.2f}  steer:{:.2f}  timestamp:{:.2f}".format(self.throttle, self.steer, self.timestamp)
+            "throttle:{:.2f}  steer(deg):{:.2f}  timestamp:{:.2f}".format(self.throttle, self.steer, self.timestamp)
 
     def update_values(self, new_state):
         self.state = new_state
         
+
+    def get_coeffs(self):
+
+        def find_closest_idx():
+            value = self.state.x
+            closest_idx = np.abs(self.waypoints[:, 0] - value).argmin()
+            return closest_idx
+        
+
+        margin = 50
+        idx = find_closest_idx()
+        coeffs = np.polyfit(self.waypoints[idx-margin : idx+margin, 0], self.waypoints[idx-margin : idx+margin, 1], 2)
+        return coeffs
 
 
     def update_controls(self):
@@ -132,14 +155,21 @@ class Controller2D(object):
         x0 = np.zeros(2*P)
 
         ## cost function weights ##
-        cte_W = 5000
-        eth_W = 1000
+        cte_W = 500
+        eth_W = 100
         v_W = 100
-        st_rate_W = 200
-        acc_rate_W = 10
-        st_W = 100
+        st_rate_W = 2
+        acc_rate_W = 1
+        st_W = 1
         acc_W = 1
         dir_W = 0
+
+
+        ## cost function parameters normalization factors to approximately make each unit equal in "cost" to the other.
+        normalize_distance = 0.05
+        normalize_rad = 0.14
+        normalize_speed = 0.5
+        normalize_acc = 0.5
 
         ## input bounds ##
         b1 = (-30, 30)
@@ -148,7 +178,9 @@ class Controller2D(object):
         
 
         ## find COFF of the polynomial ##
-        coff = np.polyfit(self.waypoints[:, 0], self.waypoints[:, 1], 2)
+        margin = 50
+        # coff = np.polyfit(self.waypoints[int(self.state.x) - margin : int(self.state.x) + margin, 0], self.waypoints[int(self.state.x):, 1], 2)
+        coff = self.get_coeffs()
         # print("coff:", coff)
         
         
@@ -168,9 +200,13 @@ class Controller2D(object):
                 u.accelartion = x[i+acc_offest]
                 next_state = model(u,init_state_1, coff, dt=STEP_TIME, L=3)
                 # print("cteW:{}  ethW:{}    vW:{}".format(cte_W, eth_W, v_W))
-                if i==0 :
-                    Error += cte_W*np.absolute(next_state.cte) + eth_W*np.absolute(next_state.eth) + v_W*np.absolute(next_state.v - self.desired_speed) \
-                            + st_W*np.absolute(u.steer_angle) + acc_W*np.absolute(u.accelartion) + dir_W*(init_state_1.x - next_state.x)
+                if True :
+                    Error += cte_W*np.absolute(next_state.cte)*normalize_distance + \
+                             eth_W*np.absolute(next_state.eth)*normalize_rad**2 + \
+                             v_W*np.absolute(next_state.v - self.desired_speed)*normalize_speed**2 + \
+                             st_W*np.absolute(deg2rad(u.steer_angle))*normalize_rad**2 + \
+                             acc_W*np.absolute(u.accelartion)*normalize_acc**2 + \
+                             dir_W*(init_state_1.x - next_state.x)*normalize_distance
                 else:
                     Error += cte_W*np.absolute(next_state.cte) + eth_W*np.absolute(next_state.eth) + v_W*np.absolute(next_state.v - self.desired_speed) \
                             + st_rate_W*np.absolute(u.steer_angle - x[i-1]) + acc_rate_W*np.absolute(u.accelartion - x[i+acc_offest-1]) \
@@ -512,21 +548,31 @@ def show_image(image, name = "env", period = 60):
     # cv2.destroyWindow("image")
 
 
-def render(waypoints, player = None, show = True, period = 4):
-    fig = figure(figsize=(20, 10), dpi = 80)
-    if isinstance(waypoints, list):
-        for _waypoints in waypoints:
-            plt.plot(_waypoints[0], _waypoints[1])
-    else: plt.plot(waypoints[0], waypoints[1], color = 'g') 
-
-    if player:
-        plt.scatter(player[0], player[1], color = 'r')
-
-    if show:
-        plt.show(block=False)
-        plt.pause(3)
-
-    # plt.close()
+def render(waypoints, controller, fig, show = True, arrow = True, clear_first = True, margin = 50, pause = 0.1):
     
-    
+    if not show : return 
 
+    if clear_first : fig.clear()
+    axes = plt.gca()
+    axes.set_xlim([int(controller.state.x) - margin, int(controller.state.x + margin)])
+    axes.set_ylim([int(controller.state.y) - margin, int(controller.state.y + margin)])
+
+    plt.plot(waypoints[:, 0], waypoints[:, 1])
+    plt.scatter(controller.state.x, controller.state.y, color = 'r', s = 4)
+    if arrow :
+        steering_angle = deg2rad(controller.steer + rad2deg(controller.state.th))
+        from_point = (controller.state.x, controller.state.y )
+        orientation_to_point = (from_point[0] + np.cos(controller.state.th)*10, from_point[1] + np.sin(controller.state.th)*10)
+        steer_to_point = (from_point[0] + np.cos(steering_angle)*10, from_point[1] + np.sin(steering_angle)*10)
+
+        style = "Simple, tail_width=0.5, head_width=4, head_length=8"
+        kw = dict(arrowstyle=style, color="k")
+        plt.gca().add_patch(patches.FancyArrowPatch(from_point, orientation_to_point, **dict(arrowstyle=style, color="g")))
+        plt.gca().add_patch(patches.FancyArrowPatch(from_point, steer_to_point, **dict(arrowstyle=style, color="r")))
+
+        # print("from:", from_point)
+        # print("orientation:", orientation_to_point)
+        # # print("steering:", steer_to_point)
+
+    plt.show(block = False)
+    plt.pause(pause)
