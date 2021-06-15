@@ -4,6 +4,7 @@ import time
 import csv
 import numpy as np
 from PIL import Image
+
 import cv2
 from numpy.lib.twodim_base import triu_indices_from
 from scipy.optimize import minimize, differential_evolution
@@ -162,7 +163,7 @@ class Controller2D(object):
         acc_rate_W = 1
         st_W = 1
         acc_W = 1
-        dir_W = 0
+        dir_W = 20000
 
 
         ## cost function parameters normalization factors to approximately make each unit equal in "cost" to the other.
