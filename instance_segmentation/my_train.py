@@ -6,6 +6,7 @@ sys.path.append('torch_utils')
 from my_utils import *
 from dataset import PennFudanDataset
 
+model_path = "model.pth"
 
 def main():
     
@@ -40,7 +41,7 @@ def main():
     optimizer = torch.optim.SGD(params, lr = 0.0005, momentum = 0.9, weight_decay = 0.0005)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = 3, gamma = 0.1)
 
-    num_epochs = 3
+    num_epochs = 5
     training_times = []
 
     print("starting to train")
@@ -51,7 +52,7 @@ def main():
         training_times.append(time.time() - start)
 
         engine.evaluate(model, test_data_loader, device = device)
-        
+        torch.save(model, model_path)
     print("training times:", training_times)
     print("THAT IS IT !")
 
