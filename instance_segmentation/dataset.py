@@ -146,7 +146,7 @@ class myOwnDataset(torch.utils.data.Dataset):
         my_annotation["iscrowd"] = iscrowd
 
         if self.transforms is not None:
-            img = self.transforms(img)
+            img, my_annotation = self.transforms(img, my_annotation)
 
         return img, my_annotation
 

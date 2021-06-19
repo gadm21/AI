@@ -30,7 +30,7 @@ def main():
     # test_dataset = torch.utils.data.Subset(dataset, indices[-50:])
 
     train_data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size = 2, shuffle = True, num_workers = 2, collate_fn=utils.collate_fn
+        dataset, batch_size = 3, shuffle = True, num_workers = 2, collate_fn=utils.collate_fn
     )
     # test_data_loader = torch.utils.data.DataLoader(
     #     dataset, batch_size = 1, shuffle= False, num_workers = 2, collate_fn = utils.collate_fn
@@ -40,10 +40,10 @@ def main():
     model.to(device)
 
     params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr = 0.0005, momentum = 0.9, weight_decay = 0.0005)
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = 3, gamma = 0.1)
+    optimizer = torch.optim.SGD(params, lr = 0.005, momentum = 0.9, weight_decay = 0.0005)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = 4, gamma = 0.05)
 
-    num_epochs = 10
+    num_epochs = 20
     training_times = []
     print("starting to train")
     for epoch in range(num_epochs):
