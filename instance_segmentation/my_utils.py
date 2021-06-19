@@ -8,7 +8,7 @@ from torch_utils import transforms  as T
 import time
 
 PennFudan_dataset_dir = 'dataset/PennFudanPed'
-sperm_dataset_root = 'dataset/sperm'
+sperm_dataset_root = 'dataset/sperm/images'
 sperm_annotations_file = 'dataset/sperm/annotations.json'
 
 def get_model_instance_segmentation(num_classes):

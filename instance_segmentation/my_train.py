@@ -1,5 +1,5 @@
 
-from instance_segmentation.dataset import myOwnDataset
+from dataset import *
 import sys
 sys.path.append('torch_utils')
 
