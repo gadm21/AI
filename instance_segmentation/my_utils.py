@@ -45,7 +45,7 @@ def get_transform(train):
 def get_albumentations_transforms():
 
     transforms = A.Compose([
-        A.Normalize(),
+        # A.Normalize(),
         A.Blur(p=0.5),
         A.ColorJitter(p=0.5),
         A.Downscale(p=0.3),

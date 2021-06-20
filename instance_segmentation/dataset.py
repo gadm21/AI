@@ -101,6 +101,7 @@ class myOwnDataset(torch.utils.data.Dataset):
         path = coco.loadImgs(img_id)[0]['file_name']
         # open the input image
         img = Image.open(os.path.join(self.root, path))
+        
 
         # number of objects in the image
         num_objs = len(coco_annotation)
@@ -145,11 +146,19 @@ class myOwnDataset(torch.utils.data.Dataset):
         my_annotation["area"] = areas
         my_annotation["iscrowd"] = iscrowd
 
+
+        img = np.array(img)
+        masks_list = list(my_annotation['masks'])
+ 
         if self.transforms is not None:
-            img, masks = self.transforms(img, masks = my_annotation['masks'])
+            transformed = self.transforms(image = img, masks = masks_list)
+        img = transformed['image']
+        masks = transformed['masks']
+        masks = np.array(masks_list)
 
+        my_annotation['masks'] = torch.as_tensor(masks, dtype=torch.float32)
 
-        my_annotation['masks'] = torch.as_tensor(masks, dtype=torch.uint8)
+        img = torch.as_tensor(img, dtype=torch.float32)
 
         return img, my_annotation
 
