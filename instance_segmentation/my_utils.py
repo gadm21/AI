@@ -3,7 +3,7 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torch_utils  import engine, utils, coco_utils
 from torch_utils import transforms  as T
-
+import albumentations as A
 
 import time
 
@@ -40,3 +40,24 @@ def get_transform(train):
         transforms.append(T.RandomHorizontalFlip(0.5))
     return T.Compose(transforms)
 
+def get_albumentations_transforms():
+
+    transforms = A.Compose([
+        A.Normalize(),
+        A.Blur(p=0.5),
+        A.ColorJitter(p=0.5),
+        A.Downscale(p=0.3),
+        A.Superpixels(p=0.3),
+        A.RandomContrast(p=0.5),
+
+        A.HorizontalFlip(p=0.5),
+        A.VerticalFlip(p=0.5),
+        A.RandomBrightnessContrast(p=0.2),
+        A.Sharpen(p = 0.5),
+
+        A.RGBShift(p=0.5),
+        A.RandomRain(p=0.3),
+        A.RandomFog(p=0.3)
+    ])
+
+    return transforms
