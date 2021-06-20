@@ -19,7 +19,7 @@ def main():
     num_classes = 2
 
     # use our dataset and defined transformations
-    dataset = myOwnDataset(root = sperm_dataset_root, annotation=sperm_annotations_file, transforms = get_transform(train=True))
+    dataset = myOwnDataset(root = sperm_dataset_root, annotation=sperm_annotations_file, transforms = get_albumentations_transforms())
     # dataset = PennFudanDataset(dataset_dir, get_transform(train=True))
     # test_dataset = PennFudanDataset(dataset_dir, get_transform(train=False))
 

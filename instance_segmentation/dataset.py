@@ -111,7 +111,7 @@ class myOwnDataset(torch.utils.data.Dataset):
 
         for obj in range(num_objs):
             masks[obj, :, :] = self.coco.annToMask(coco_annotation[obj])
-        masks = torch.as_tensor(masks, dtype=torch.uint8)
+        
 
         # Bounding boxes for objects
         # In coco format, bbox = [xmin, ymin, width, height]
@@ -146,7 +146,10 @@ class myOwnDataset(torch.utils.data.Dataset):
         my_annotation["iscrowd"] = iscrowd
 
         if self.transforms is not None:
-            img, my_annotation = self.transforms(img, my_annotation)
+            img, masks = self.transforms(img, masks = my_annotation['masks'])
+
+
+        my_annotation['masks'] = torch.as_tensor(masks, dtype=torch.uint8)
 
         return img, my_annotation
 
