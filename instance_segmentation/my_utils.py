@@ -57,9 +57,9 @@ def get_albumentations_transforms():
         A.RandomBrightnessContrast(p=0.2),
         A.Sharpen(p = 0.5),
 
-        A.RGBShift(p=0.5),
-        A.RandomRain(p=0.3),
-        A.RandomFog(p=0.3)
+        # A.RGBShift(p=0.5),
+        # A.RandomRain(p=0.3),
+        # A.RandomFog(p=0.3)
     ])
 
     return transforms

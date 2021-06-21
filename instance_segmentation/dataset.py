@@ -1,11 +1,19 @@
 import os
+import sys
+sys.path.append('torch_utils')
 import numpy as np
 import torch
 from PIL import Image
 import cv2 
 
+from torchvision.transforms import functional as F
+import albumentations as A
+
 # from pycocotools.coco import COCO
 from pycocotools import coco as co
+
+from my_utils import *
+
 
 class PennFudanDataset(object):
     def __init__(self, root, transforms = None):
@@ -149,18 +157,19 @@ class myOwnDataset(torch.utils.data.Dataset):
 
         img = np.array(img)
         masks_list = list(my_annotation['masks'])
- 
+
         if self.transforms is not None:
             transformed = self.transforms(image = img, masks = masks_list)
-        img = transformed['image']
-        masks = transformed['masks']
-        masks = np.array(masks_list)
+        
+            img = transformed['image']
+            masks_list = transformed['masks']
 
-        my_annotation['masks'] = torch.as_tensor(masks, dtype=torch.float32)
+        img = F.to_tensor(img)
+        masks = torch.as_tensor(np.array(masks), dtype=torch.float32)
 
-        img = torch.as_tensor(img, dtype=torch.float32)
-
+        my_annotation['masks'] = masks
         return img, my_annotation
+
 
     def __len__(self):
         return len(self.ids)
@@ -224,7 +233,20 @@ def main():
 
     root = r'dataset\sperm\images'
     annotations = r'dataset\sperm\annotations.json'
-    coco = myOwnDataset(root, annotations)
+    coco = myOwnDataset(root, annotations, get_albumentations_transforms())
+
+    data = coco[1]
+    image, annotations = data
+    image = image.numpy().transpose(1,2,0)
+    # mask = annotations['masks'].numpy().transpose(1,2,0).sum(axis=2)
+    mask = annotations['masks'].numpy().transpose(1,2,0).sum(axis=2)
+
+    image = np.array((image/image.max())*255, dtype = np.uint8)
+    mask = np.array((mask/mask.max())*255, dtype = np.uint8)
+
+    show_image(image)
+    show_image(mask)
+
 
 
 if __name__ == "__main__":
