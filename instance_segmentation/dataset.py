@@ -132,7 +132,7 @@ class myOwnDataset(torch.utils.data.Dataset):
             xmax = xmin + coco_annotation[i]['bbox'][2]
             ymax = ymin + coco_annotation[i]['bbox'][3]
             boxes.append([xmin, ymin, xmax, ymax])
-        boxes = torch.as_tensor(boxes, dtype=torch.float32)
+        
         # Labels (In my case, I only one class: target class or background)
         labels = torch.ones((num_objs,), dtype=torch.int64)
         # Tensorise img_id
@@ -147,7 +147,6 @@ class myOwnDataset(torch.utils.data.Dataset):
 
         # Annotation is in dictionary format
         my_annotation = {}
-        my_annotation["boxes"] = boxes
         my_annotation["labels"] = labels
         my_annotation["image_id"] = img_id
         my_annotation['masks'] = masks
@@ -159,14 +158,18 @@ class myOwnDataset(torch.utils.data.Dataset):
         masks_list = list(my_annotation['masks'])
 
         if self.transforms is not None:
-            transformed = self.transforms(image = img, masks = masks_list)
+            class_labels = labels.numpy()
+            transformed = self.transforms(image = img, masks = masks_list, bboxes = boxes, class_labels=class_labels)
         
             img = transformed['image']
             masks_list = transformed['masks']
+            boxes = transformed['bboxes']
 
         img = F.to_tensor(img)
-        masks = torch.as_tensor(np.array(masks), dtype=torch.float32)
+        boxes = torch.as_tensor(boxes, dtype=torch.float32)
+        masks = torch.as_tensor(np.array(masks_list), dtype=torch.float32)
 
+        my_annotation["boxes"] = boxes
         my_annotation['masks'] = masks
         return img, my_annotation
 
@@ -244,8 +247,17 @@ def main():
     image = np.array((image/image.max())*255, dtype = np.uint8)
     mask = np.array((mask/mask.max())*255, dtype = np.uint8)
 
-    show_image(image)
-    show_image(mask)
+
+    boxes = annotations['boxes'].numpy().astype(int)
+    boxes = list(boxes)
+    
+    boxed_image = image.copy()
+    for box in boxes:
+        x, y, x2, y2 = box
+        boxed_image = cv2.rectangle(boxed_image, (int(x), int(y)), (int(x2), int(y2)), (255,0,0), 2)
+        
+    show_image(boxed_image)
+    # show_image(mask)
 
 
 

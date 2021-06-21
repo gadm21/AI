@@ -46,20 +46,21 @@ def get_albumentations_transforms():
 
     transforms = A.Compose([
         # A.Normalize(),
-        A.Blur(p=0.5),
-        A.ColorJitter(p=0.5),
-        A.Downscale(p=0.3),
-        A.Superpixels(p=0.3),
-        A.RandomContrast(p=0.5),
+        # A.Blur(p=0.5),
+        # A.ColorJitter(p=0.5),
+        # A.Downscale(p=0.3),
+        # A.Superpixels(p=0.3),
+        # A.RandomContrast(p=0.5),
+        A.ShiftScaleRotate(p=1),
 
-        A.HorizontalFlip(p=0.5),
-        A.VerticalFlip(p=0.5),
-        A.RandomBrightnessContrast(p=0.2),
-        A.Sharpen(p = 0.5),
+        # A.HorizontalFlip(p=0.5),
+        # A.VerticalFlip(p=0.5),
+        # A.RandomBrightnessContrast(p=0.5),
+        # A.Sharpen(p = 0.5),
 
         # A.RGBShift(p=0.5),
         # A.RandomRain(p=0.3),
         # A.RandomFog(p=0.3)
-    ])
+    ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['class_labels']))
 
     return transforms
