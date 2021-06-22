@@ -1,5 +1,5 @@
-from albumentations.core.composition import BboxParams, Compose
-
+from albumentations.core.composition import BboxParams
+from albumentations.core.composition import Compose as compo
 from albumentations.augmentations.transforms import *
 from albumentations import *
 
@@ -19,7 +19,7 @@ from albumentations import *
 # )
 
 
-def get_transforms(config, mode: str = "train") -> Compose:
+def get_albumentations_transforms(mode):
     """
     Composes albumentations transforms.
     Returns the full list of transforms when mode is "train".
@@ -27,7 +27,7 @@ def get_transforms(config, mode: str = "train") -> Compose:
     """
     # compose validation transforms
     if mode == "val":
-        transforms = Compose(
+        transforms = compo(
             [],
             bbox_params=BboxParams(
                 format="pascal_voc",
@@ -39,7 +39,7 @@ def get_transforms(config, mode: str = "train") -> Compose:
     # compose train transforms
     # TODO: make transformation parameters configurable from yml
     elif mode == "train":
-        transforms = Compose(
+        transforms = compo(
             [
                 # LongestMaxSize(),
                 # PadIfNeeded(min_height=768, min_width=768, border_mode=0, p=1),

@@ -24,14 +24,14 @@ def _flip_coco_person_keypoints(kps, width):
     return flipped_data
 
 
-class Compose(object):
-    def __init__(self, transforms):
-        self.transforms = transforms
+# class Compose(object):
+#     def __init__(self, transforms):
+#         self.transforms = transforms
 
-    def __call__(self, image, target):
-        for t in self.transforms:
-            image, target = t(image, target)
-        return image, target
+#     def __call__(self, image, target):
+#         for t in self.transforms:
+#             image, target = t(image, target)
+#         return image, target
 
 
 class RandomHorizontalFlip(T.RandomHorizontalFlip):

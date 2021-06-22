@@ -8,12 +8,15 @@ import cv2
 
 from torchvision.transforms import functional as F
 import albumentations as A
-
+from albumentations.core.composition import BboxParams, Compose
 # from pycocotools.coco import COCO
 from pycocotools import coco as co
 
-from my_utils import *
+from torch_utils.coco_utils import *
+from torch_utils.coco_eval import *
 
+from my_utils import *
+from utils import *
 
 class PennFudanDataset(object):
     def __init__(self, root, transforms = None):
@@ -96,7 +99,7 @@ class COCODataset(object):
         transforms: Albumentations compose object.
     """
 
-    def __init__(self, root_dir: str, coco_path: str, transforms: Compose):
+    def __init__(self, root_dir, coco_path, transforms):
         self.root_dir = root_dir
         self.transforms = transforms
         # process coco file
@@ -145,6 +148,8 @@ class COCODataset(object):
                 segmentations, height=image.shape[0], width=image.shape[1]
             )
 
+            masks = list(masks.numpy())
+            
             if self.transforms is not None:
                 # arrange transform data
                 data = {
@@ -154,7 +159,7 @@ class COCODataset(object):
                     "category_id": category_ids,
                 }
                 # apply transform
-                augmented = self.transforms(**data)
+                augmented = self.transforms(image = image, masks = masks, bboxes = voc_bboxes, category_id= category_ids)
                 # get augmented image and bboxes
                 image = augmented["image"]
                 voc_bboxes = augmented["bboxes"]

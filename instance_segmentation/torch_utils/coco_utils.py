@@ -2,6 +2,8 @@ import copy
 import os
 from PIL import Image
 
+import numpy as np
+
 import torch
 import torch.utils.data
 import torchvision
@@ -9,7 +11,7 @@ import torchvision
 from pycocotools import mask as coco_mask
 from pycocotools.coco import COCO
 
-import transforms as T
+import torch_utils.transforms as T
 
 
 class FilterAndRemapCocoCategories(object):
@@ -250,3 +252,94 @@ def get_coco(root, image_set, transforms, mode='instances'):
 
 def get_coco_kp(root, image_set, transforms):
     return get_coco(root, image_set, transforms, mode="person_keypoints")
+
+
+
+
+def convert_coco_poly_to_torch_bbox(
+    segmentations: list, height: int, width: int
+) -> (torch.tensor, torch.tensor):
+    """
+    Converts polygons in COCO format to bounding box in pixels. Returns
+    bounding box coords in both COCO and VOC format. Results are returned as
+    torch tensors.
+    Args:
+        segmentations: List of COCO segmentations.
+        height: Height of the target image.
+        width: Width of the target image.
+    Returns: 
+        coco_bboxes: List of COCO bounding boxes as torch tensor [x_min, y_min, width, height] 
+        voc_bboxes: List of VOC bounding boxes as torch tensor [x_min, y_min, x_max, y_max]
+    """
+    coco_bboxes = []
+    voc_bboxes = []
+    for segmentation in segmentations:
+        # calculate coco bbox
+        coco_bbox = coco_seg2bbox(segmentation, height, width)
+        coco_bboxes.append(coco_bbox)
+        # calculate voc bbox
+        voc_bbox = [
+            coco_bbox[0],
+            coco_bbox[1],
+            coco_bbox[0] + coco_bbox[2],
+            coco_bbox[1] + coco_bbox[3],
+        ]
+        voc_bboxes.append(voc_bbox)
+
+    # convert bboxes to torch tensors
+    coco_bboxes = torch.as_tensor(coco_bboxes, dtype=torch.float32)
+    voc_bboxes = torch.as_tensor(voc_bboxes, dtype=torch.float32)
+
+    return coco_bboxes, voc_bboxes
+
+
+def convert_coco_poly_to_bbox(
+    segmentations: list, height: int, width: int
+) -> (list, list):
+    """
+    Converts polygons in COCO format to bounding box in pixels. Returns
+    bounding box coords in both COCO and VOC format.
+    Args:
+        segmentations: List of COCO segmentations.
+        height: Height of the target image.
+        width: Width of the target image.
+    Returns: 
+        coco_bboxes: List of COCO bounding boxes [x_min, y_min, width, height] 
+        voc_bboxes: List of VOC bounding boxes [x_min, y_min, x_max, y_max]
+    """
+    coco_bboxes = []
+    voc_bboxes = []
+    for segmentation in segmentations:
+        # calculate coco bbox
+        coco_bbox = coco_seg2bbox(segmentation, height, width)
+        coco_bboxes.append(coco_bbox)
+        # calculate voc bbox
+        voc_bbox = [
+            coco_bbox[0],
+            coco_bbox[1],
+            coco_bbox[0] + coco_bbox[2],
+            coco_bbox[1] + coco_bbox[3],
+        ]
+        voc_bboxes.append(voc_bbox)
+
+    return coco_bboxes, voc_bboxes
+
+
+
+
+
+def coco_seg2bbox(polygons, image_height: int, image_width: int) -> list:
+    """Converts polygons in COCO format to bounding box in pixels.
+    Args:
+        polygons:
+        image_height: Height of the target image.
+        image_width: Width of the target image.
+    Returns: [x_min, y_min, width, height]
+    """
+    rles = coco_mask.frPyObjects(polygons, image_height, image_width)
+    mask = coco_mask.decode(rles)
+    bbox = coco_mask.toBbox(coco_mask.encode(np.asfortranarray(mask.astype(np.uint8))))
+
+    return bbox[0].astype(int).tolist()
+
+

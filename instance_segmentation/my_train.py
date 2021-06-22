@@ -2,26 +2,28 @@
 # from instance_segmentation_deprecated.my_utils import get_model_instance_segmentation
 import os
 import sys
-import inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
+# import inspect
+# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+# parentdir = os.path.dirname(currentdir)
+# sys.path.append(parentdir)
 
-from core.engine import train_one_epoch, evaluate
-from core.coco_utils import get_coco_api_from_dataset
-import core.utils
+import numpy as np
+
+from torch_utils.engine import train_one_epoch, evaluate
+from torch_utils.coco_utils import get_coco_api_from_dataset
+from torch_utils.helper import *
 
 from utils import * 
-from dataset import *
 from transform import *
+from dataset import *
 from model import *
 
-configs_path = os.path.join(parentdir, 'configs')
-configs_file_path = os.path.join(configs_path, 'default_config.yml')
+# configs_path = os.path.join(parentdir, 'configs')
+# configs_file_path = os.path.join(configs_path, 'default_config.yml')
 
-data_path = os.path.join(parentdir, 'data')
+data_path = 'data' # os.path.join(parentdir, 'data')
 sperm_dataset_path = os.path.join(data_path, 'sperm_dataset')
-annotations_file_path = os.path.join(data_path, 'sperm_dataset/annotations.json')
+annotations_file_path = os.path.join(sperm_dataset_path, 'annotations.json')
 
 model_path = "model.pth"
 
@@ -33,12 +35,12 @@ def main():
     
 
     # use our dataset and defined transformations
-    albumentations_transforms = get_transforms(configs_file_path, mode = 'train')
-    dataset = COCODataset(root = os.path.join(sperm_dataset_path, 'images'), \
-        annotation=annotations_file_path, transforms = albumentations_transforms)
+    albumentations_transforms = get_albumentations_transforms( mode = 'train')
+    dataset = COCODataset(root_dir = os.path.join(sperm_dataset_path, 'images'), \
+        coco_path=annotations_file_path, transforms = albumentations_transforms)
 
     train_data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size = 3, shuffle = True, num_workers = 2, collate_fn=core.utils.collate_fn
+        dataset, batch_size = 3, shuffle = True, num_workers = 2, collate_fn=collate_fn
     )
     
 
