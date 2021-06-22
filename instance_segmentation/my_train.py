@@ -1,42 +1,50 @@
 
-from dataset import *
+from instance_segmentation_deprecated.my_utils import get_model_instance_segmentation
+import os
 import sys
-sys.path.append('torch_utils')
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
 
+from core.engine import train_one_epoch, evaluate
+from core.coco_utils import get_coco_api_from_dataset
+import core.utils
 
-from my_utils import *
-from dataset import PennFudanDataset
+from utils import * 
+from dataset import *
+from transform import *
+from model import *
+
+configs_path = os.path.join(parentdir, 'configs')
+configs_file_path = os.path.join(configs_path, 'default_config.yml')
+
+data_path = os.path.join(parentdir, 'data')
+sperm_dataset_path = os.path.join(data_path, 'sperm_dataset')
+annotations_file_path = os.path.join(data_path, 'sperm_dataset/annotations.json')
 
 model_path = "model.pth"
+
 
 def main():
     
     # train on the GPU or on the CPU, if a GPU is not available
-    device = torch.device('cuda') if torch.cuda.is_available() \
-         else torch.device('cpu')
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     
-    # our dataset has two classes only - background and person
-    num_classes = 2
 
     # use our dataset and defined transformations
-    dataset = myOwnDataset(root = sperm_dataset_root, annotation=sperm_annotations_file, transforms = get_albumentations_transforms())
-    # dataset = PennFudanDataset(dataset_dir, get_transform(train=True))
-    # test_dataset = PennFudanDataset(dataset_dir, get_transform(train=False))
-
-
-    # split the dataset into train and test sets
-    indices = torch.randperm(len(dataset)).tolist()
-    train_dataset = torch.utils.data.Subset(dataset, indices[:])
-    # test_dataset = torch.utils.data.Subset(dataset, indices[-50:])
+    albumentations_transforms = get_transforms(configs_file_path, mode = 'train')
+    dataset = COCODataset(root = os.path.join(sperm_dataset_path, 'images'), \
+        annotation=annotations_file_path, transforms = albumentations_transforms)
 
     train_data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size = 3, shuffle = True, num_workers = 2, collate_fn=utils.collate_fn
+        dataset, batch_size = 3, shuffle = True, num_workers = 2, collate_fn=core.utils.collate_fn
     )
-    # test_data_loader = torch.utils.data.DataLoader(
-    #     dataset, batch_size = 1, shuffle= False, num_workers = 2, collate_fn = utils.collate_fn
-    # )
+    
 
-    model = get_model_instance_segmentation(num_classes = num_classes)
+    # our dataset has two classes only - background and sperm
+    num_classes = 2
+    model = get_instance_segmentation_model(num_classes = num_classes)
     model.to(device)
 
     params = [p for p in model.parameters() if p.requires_grad]
@@ -44,17 +52,12 @@ def main():
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = 4, gamma = 0.9)
 
     num_epochs = 20
-    training_times = []
     print("starting to train")
     for epoch in range(num_epochs):
-        start = time.time()
-        engine.train_one_epoch(model, optimizer, train_data_loader, device, epoch, print_freq = 10)
+        train_one_epoch(model, optimizer, train_data_loader, device, epoch, print_freq = 10)
         lr_scheduler.step()
-        training_times.append(time.time() - start)
 
-        # engine.evaluate(model, test_data_loader, device = device)
-        torch.save(model, model_path)
-    print("training times:", training_times)
+    torch.save(model, model_path)
 
     print("THAT IS IT !")
 
