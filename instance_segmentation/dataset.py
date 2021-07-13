@@ -86,7 +86,6 @@ class PennFudanDataset(object):
         return len(self.imgs)
 
 
-
 class COCODataset(object):
     """
     Compatible with any coco style annotation file, annotations must include
@@ -148,6 +147,7 @@ class COCODataset(object):
                 segmentations, height=image.shape[0], width=image.shape[1]
             )
 
+            mask = masks_to_mask(masks)
             masks = list(masks.numpy())
             
             if self.transforms is not None:
@@ -166,6 +166,7 @@ class COCODataset(object):
                 category_ids = augmented["category_id"]
                 # get masks
                 masks = augmented["masks"]
+                mask = masks_to_mask(np.array(masks))
 
         # check again if augmentation result is negative sample
         if (not is_negative_sample) and (self.transforms is not None):
@@ -192,9 +193,13 @@ class COCODataset(object):
         # masks
         if not is_negative_sample:  # positive target
             target["masks"] = to_uint8_tensor(masks)
+            target["mask"] = to_uint8_tensor(mask)
         else:  # negative target
             target["masks"] = torch.zeros(
                 0, image.shape[0], image.shape[1], dtype=torch.uint8
+            )
+            target["mask"] = torch.zeros(
+              0, image.shape[0], image.shape[1], dtype = torch.uint8
             )
 
         target["area"] = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
@@ -204,13 +209,10 @@ class COCODataset(object):
 
         # normalize image
         image = image / np.max(image)
-        return image_to_float_tensor(image), target
+        return image_to_float_tensor(image), target['mask'] # target
 
     def __len__(self):
         return len(self.images)
-
-
-
 
 
 class myOwnDataset(torch.utils.data.Dataset):
@@ -244,7 +246,7 @@ class myOwnDataset(torch.utils.data.Dataset):
 
         for obj in range(num_objs):
             masks[obj, :, :] = self.coco.annToMask(coco_annotation[obj])
-        
+ 
 
         # Bounding boxes for objects
         # In coco format, bbox = [xmin, ymin, width, height]
@@ -257,7 +259,7 @@ class myOwnDataset(torch.utils.data.Dataset):
             ymax = ymin + coco_annotation[i]['bbox'][3]
             boxes.append([xmin, ymin, xmax, ymax])
         
-        # Labels (In my case, I only one class: target class or background)
+        # Labels (In my case, I have only one class: target class or background)
         labels = torch.ones((num_objs,), dtype=torch.int64)
         # Tensorise img_id
         img_id = torch.tensor([img_id])
@@ -271,6 +273,7 @@ class myOwnDataset(torch.utils.data.Dataset):
 
         # Annotation is in dictionary format
         my_annotation = {}
+        my_annotation['path'] = path
         my_annotation["labels"] = labels
         my_annotation["image_id"] = img_id
         my_annotation['masks'] = masks
@@ -291,7 +294,11 @@ class myOwnDataset(torch.utils.data.Dataset):
 
         img = F.to_tensor(img)
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
+        
         masks = torch.as_tensor(np.array(masks_list), dtype=torch.float32)
+        
+        if len(list(masks.shape)) == 1:
+            masks = torch.zeros(0, img.shape[0], img.shape[1], dtype=torch.float32)
 
         my_annotation["boxes"] = boxes
         my_annotation['masks'] = masks
@@ -372,13 +379,19 @@ def test():
     return
 
 
-
+def masks_to_mask(masks):
+  print("type:", type(masks))
+  print("shape:", masks.shape)
+  if isinstance(masks, torch.Tensor):
+    mask = masks.numpy().transpose(1,2,0).sum(axis=2).astype(np.int64)
+  else: mask = masks.transpose(1,2,0).sum(axis=2).astype(np.int64)
+  return mask
 
 
 def main():
 
-    root = r'dataset\sperm\images'
-    annotations = r'dataset\sperm\annotations.json'
+    root = r'data\sperm_dataset\images'
+    annotations = r'data\sperm_dataset\annotations.json'
     coco = myOwnDataset(root, annotations, get_albumentations_transforms())
 
     data = coco[1]
@@ -397,14 +410,63 @@ def main():
     boxed_image = image.copy()
     for box in boxes:
         x, y, x2, y2 = box
+        x_center = x + (x2//2)
+        y_center = y + (y2//2)
         boxed_image = cv2.rectangle(boxed_image, (int(x), int(y)), (int(x2), int(y2)), (255,0,0), 2)
-        
-    show_image(boxed_image)
+    
+    # show_image(image)
     # show_image(mask)
+    # show_image(boxed_image)
 
+def buid_yolo_dataset():
+    root = r'data\sperm_dataset\images'
+    annotations = r'data\sperm_dataset\annotations.json'
+    coco = myOwnDataset(root, annotations, get_albumentations_transforms())
+
+    images_dir = os.path.join('yolo_data', 'images')
+    labels_dir = os.path.join('yolo_data', 'labels')
+
+
+    for i in range(20):
+
+        data = coco[random.randint(0, len(coco)-1)]
+        image, annotations = data
+        file_name = annotations['path'].split('.')[0]
+        image_path = os.path.join(images_dir, file_name + '_{}_'.format(i) + '.jpg')
+        label_path = os.path.join(labels_dir, file_name+ '_{}_'.format(i)+'.txt')
+
+        image = image.numpy().transpose(1,2,0)
+        # mask = annotations['masks'].numpy().transpose(1,2,0).sum(axis=2)
+        
+        mask = annotations['masks'].numpy().transpose(1,2,0).sum(axis=2)
+
+        image = np.array((image/image.max())*255, dtype = np.uint8)
+        mask = np.array((mask/mask.max())*255, dtype = np.uint8)
+
+
+        boxes = annotations['boxes'].numpy().astype(int)
+        boxes = list(boxes)
+        if len(boxes ) == 0 : continue 
+        # boxed_image = image.copy()
+        file = open(label_path, 'w') 
+        for box in boxes:
+            x, y, x2, y2 = box
+            height = (y2 - y) / image.shape[0]
+            width = (x2 - x)  / image.shape[1]
+            y_center = (y + (height//2)) / image.shape[0]
+            x_center = (x + (width//2)) / image.shape[1]
+            file.write(str(0)+' '+str(x_center)+' '+str(y_center)+' '+str(width)+' '+str(height)+'\n')
+            # boxed_image = cv2.rectangle(boxed_image, (int(x), int(y)), (int(x2), int(y2)), (255,0,0), 2)
+        file.close()
+        cv2.imwrite(image_path, image)
+
+    # print(file_name)
+    # show_image(image)
+    # print(image.shape)
+    # show_image(boxed_image)
 
 
 if __name__ == "__main__":
 
-    main()
+    buid_yolo_dataset()
     

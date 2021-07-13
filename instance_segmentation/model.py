@@ -1,4 +1,5 @@
 import torch, torchvision
+import torch.nn as nn
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torchvision.models.detection.rpn import AnchorGenerator

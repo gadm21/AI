@@ -1,0 +1,15 @@
+
+
+
+load_model : True
+model_path : 'app_migration.h5'
+
+app_requirements:
+  os: [MacOs, 0, 0]
+  ram: [8_000, 2, 1] # Mbyte
+  network: [1_000, 2, 0]  # Mbit
+  processor: [3, 2, 0] # GHz
+  cores: [2, 1, 0] # number of cores
+  security0: [10, 1, 0] # some security unit
+  security1: [7, 1, 0] # some security unit
+  security2: [3, 1, 0] # some security unit

@@ -1,8 +1,8 @@
 import os
 
-from dataset import COCODataset
+from dataset import COCODataset, myOwnDataset
 from transform import *
-
+from utils import *
 
 data_path = 'data' # os.path.join(parentdir, 'data')
 sperm_dataset_path = os.path.join(data_path, 'sperm_dataset')
@@ -23,5 +23,14 @@ def main():
     print(type(target))
     print(target.keys())
 
+
+
+def json_to_yolo():
+    
+    a = np.zeros((0, 10, 10)).sum(axis = 0)
+    print(a.shape)
+
+
+
 if __name__ == '__main__':
-    main()
+    json_to_yolo()

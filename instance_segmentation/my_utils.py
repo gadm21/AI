@@ -8,8 +8,8 @@ import albumentations as A
 import time
 
 PennFudan_dataset_dir = 'dataset/PennFudanPed'
-sperm_dataset_root = 'dataset/sperm/images'
-sperm_annotations_file = 'dataset/sperm/annotations.json'
+sperm_dataset_root = 'data/sperm_dataset/images'
+sperm_annotations_file = 'data/sperm_dataset/annotations.json'
 
 def get_model_instance_segmentation(num_classes):
     # load an instance segmentation model pre-trained pre-trained on COCO
@@ -41,7 +41,7 @@ def get_transform(train):
     return T.Compose(transforms)
 
 
-'''
+
 def get_albumentations_transforms():
 
     transforms = A.Compose([
@@ -49,9 +49,9 @@ def get_albumentations_transforms():
         # A.Blur(p=0.5),
         # A.ColorJitter(p=0.5),
         # A.Downscale(p=0.3),
-        A.Superpixels(p=0.3),
+        # A.Superpixels(p=0.3),
         A.RandomContrast(p=0.5),
-        A.ShiftScaleRotate(p=1),
+        A.ShiftScaleRotate(p=0.8),
 
         A.HorizontalFlip(p=0.5),
         A.VerticalFlip(p=0.5),
@@ -65,4 +65,3 @@ def get_albumentations_transforms():
 
     return transforms
 
-'''
