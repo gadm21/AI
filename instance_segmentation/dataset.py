@@ -424,6 +424,7 @@ def buid_yolo_dataset():
     coco = myOwnDataset(root, annotations, get_albumentations_transforms())
 
     images_dir = os.path.join('yolo_data', 'images')
+    boxed_images_dir = os.path.join('yolo_data', 'boxed_images')
     labels_dir = os.path.join('yolo_data', 'labels')
 
 
@@ -434,6 +435,7 @@ def buid_yolo_dataset():
         file_name = annotations['path'].split('.')[0]
         image_path = os.path.join(images_dir, file_name + '_{}_'.format(i) + '.jpg')
         label_path = os.path.join(labels_dir, file_name+ '_{}_'.format(i)+'.txt')
+        boxed_image_path = os.path.join(boxed_images_dir, file_name + '_{}_'.format(i) + '.jpg')
 
         image = image.numpy().transpose(1,2,0)
         # mask = annotations['masks'].numpy().transpose(1,2,0).sum(axis=2)
@@ -447,7 +449,7 @@ def buid_yolo_dataset():
         boxes = annotations['boxes'].numpy().astype(int)
         boxes = list(boxes)
         if len(boxes ) == 0 : continue 
-        # boxed_image = image.copy()
+        boxed_image = image.copy()
         file = open(label_path, 'w') 
         for box in boxes:
             x, y, x2, y2 = box
@@ -456,9 +458,10 @@ def buid_yolo_dataset():
             y_center = (y + (height//2)) / image.shape[0]
             x_center = (x + (width//2)) / image.shape[1]
             file.write(str(0)+' '+str(x_center)+' '+str(y_center)+' '+str(width)+' '+str(height)+'\n')
-            # boxed_image = cv2.rectangle(boxed_image, (int(x), int(y)), (int(x2), int(y2)), (255,0,0), 2)
+            boxed_image = cv2.rectangle(boxed_image, (int(x), int(y)), (int(x2), int(y2)), (255,0,0), 2)
         file.close()
         cv2.imwrite(image_path, image)
+        cv2.imwrite(boxed_image_path, boxed_image)
 
     # print(file_name)
     # show_image(image)
@@ -466,7 +469,9 @@ def buid_yolo_dataset():
     # show_image(boxed_image)
 
 
+
+
 if __name__ == "__main__":
 
-    buid_yolo_dataset()
+    augment_yolo_data()
     
