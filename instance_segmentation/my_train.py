@@ -35,7 +35,7 @@ def main():
     
 
     # use our dataset and defined transformations
-    albumentations_transforms = get_albumentations_transforms( mode = 'train')
+    albumentations_transforms = get_albumentations_transforms()
     dataset = COCODataset(root_dir = os.path.join(sperm_dataset_path, 'images'), \
         coco_path=annotations_file_path, transforms = albumentations_transforms)
 

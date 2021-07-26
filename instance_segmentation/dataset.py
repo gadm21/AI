@@ -116,6 +116,7 @@ class COCODataset(object):
         # get absolute image path
         abs_image_path = os.path.join(self.root_dir, relative_image_path)
         # load image
+        print(abs_image_path)
         image = cv2.imread(abs_image_path)
         # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -156,14 +157,14 @@ class COCODataset(object):
                     "image": image,
                     "bboxes": voc_bboxes,
                     "masks": masks,
-                    "category_id": category_ids,
+                    "class_labels": category_ids,
                 }
                 # apply transform
-                augmented = self.transforms(image = image, masks = masks, bboxes = voc_bboxes, category_id= category_ids)
+                augmented = self.transforms(image = image, masks = masks, bboxes = voc_bboxes, class_labels= category_ids)
                 # get augmented image and bboxes
                 image = augmented["image"]
                 voc_bboxes = augmented["bboxes"]
-                category_ids = augmented["category_id"]
+                category_ids = augmented["class_labels"]
                 # get masks
                 masks = augmented["masks"]
                 mask = masks_to_mask(np.array(masks))
@@ -470,8 +471,24 @@ def buid_yolo_dataset():
 
 
 
+def test_dataset():
+    def my_collate_fn(batch):
+        return tuple(zip(*batch))
+    sperm_dataset_path = os.path.join('data', 'morphology_coco')
+    annotations_file_path = os.path.join(sperm_dataset_path, 'annotations.json')
 
+    albumentations_transforms = get_albumentations_transforms( )
+    dataset = COCODataset(root_dir = os.path.join(sperm_dataset_path, 'images'), \
+        coco_path=annotations_file_path, transforms = albumentations_transforms)
+
+    train_data_loader = torch.utils.data.DataLoader(
+        dataset, batch_size = 3, shuffle = True, num_workers = 2, collate_fn=my_collate_fn
+    )
+
+    i = dataset[1]
+    print(type(i))
+    
 if __name__ == "__main__":
 
-    augment_yolo_data()
+    test_dataset()
     
