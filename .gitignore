@@ -1,3 +1,4 @@
 __pycache__/
 *.pyc
 torch_segnet/
+YoloV5_DeepSort/data/*

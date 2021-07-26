@@ -10,14 +10,14 @@ from utils import *
 
 
 def augment_yolo_data():
-    data_dir = 'yolo_data2'
+    data_dir = 'data'
     images_dir = os.path.join(data_dir, 'images')
     labels_dir = os.path.join(data_dir, 'labels')
     image_paths = [os.path.join(images_dir, image) for image in sorted(os.listdir(images_dir))]
     label_paths = [os.path.join(labels_dir, label) for label in sorted(os.listdir(labels_dir))]
 
-    new_images_dir = os.path.join('augmented_yolo_data2', 'images')
-    new_labels_dir = os.path.join('augmented_yolo_data2', 'labels')
+    new_images_dir = os.path.join(data_dir, 'new_images')
+    new_labels_dir = os.path.join(data_dir, 'new_labels')
     
     transform = my_augmentation()
     class_labels = ['sperm']
@@ -31,7 +31,7 @@ def augment_yolo_data():
         cv2.imwrite(os.path.join(new_images_dir, str(counter))+'.jpg', image)
         write_yolo_labels(os.path.join(new_labels_dir, str(counter)+'.txt'), boxes)
 
-        for _ in range(10):
+        for _ in range(20):
             counter += 1
             transformed = transform(image = image, bboxes = boxes, class_labels = class_labels*len(boxes))
             cv2.imwrite(os.path.join(new_images_dir, str(counter))+'.jpg', transformed['image'])
