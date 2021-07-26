@@ -2,6 +2,7 @@ from albumentations.core.composition import BboxParams
 from albumentations.core.composition import Compose as compo
 from albumentations.augmentations.transforms import *
 from albumentations import *
+import albumentations as A
 
 # (
 #     LongestMaxSize,
@@ -19,7 +20,7 @@ from albumentations import *
 # )
 
 
-def get_albumentations_transforms(mode):
+def get_albumentations_transforms(mode ):
     """
     Composes albumentations transforms.
     Returns the full list of transforms when mode is "train".
@@ -41,26 +42,22 @@ def get_albumentations_transforms(mode):
     elif mode == "train":
         transforms = compo(
             [
-                # LongestMaxSize(),
-                # PadIfNeeded(min_height=768, min_width=768, border_mode=0, p=1),
-                # RandomSizedBBoxSafeCrop(),
+        # A.Normalize(),
+        # A.Blur(p=0.5),
+        # A.ColorJitter(p=0.5),
+        # A.Downscale(p=0.3),
+        # A.Superpixels(p=0.3),
+        A.RandomContrast(p=0.5),
+        A.ShiftScaleRotate(p=0.8),
 
-                ShiftScaleRotate(p=0.8),
-                HorizontalFlip(),
-                VerticalFlip(),
+        A.HorizontalFlip(p=0.5),
+        A.VerticalFlip(p=0.5),
+        A.RandomBrightnessContrast(p=0.5),
+        A.Sharpen(p = 0.5),
 
-                Sharpen(),
-                RandomRotate90(),
-                RandomBrightnessContrast(),
-                MotionBlur(p=0.1),
-
-                Downscale(),
-                Superpixels(),
-                RandomContrast()
-
-                # RandomGamma(),
-                # HueSaturationValue(),
-                # JpegCompression(),
+        # A.RGBShift(p=0.5),
+        # A.RandomRain(p=0.3),
+        # A.RandomFog(p=0.3)
             ],
             bbox_params=BboxParams(
                 format="pascal_voc",

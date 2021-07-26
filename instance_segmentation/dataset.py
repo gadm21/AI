@@ -18,6 +18,8 @@ from torch_utils.coco_eval import *
 from my_utils import *
 from utils import *
 
+# from transform import get_albumentations_transforms
+
 class PennFudanDataset(object):
     def __init__(self, root, transforms = None):
         self.root = root
@@ -86,6 +88,7 @@ class PennFudanDataset(object):
         return len(self.imgs)
 
 
+
 class COCODataset(object):
     """
     Compatible with any coco style annotation file, annotations must include
@@ -116,7 +119,6 @@ class COCODataset(object):
         # get absolute image path
         abs_image_path = os.path.join(self.root_dir, relative_image_path)
         # load image
-        print(abs_image_path)
         image = cv2.imread(abs_image_path)
         # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -169,6 +171,7 @@ class COCODataset(object):
                 masks = augmented["masks"]
                 mask = masks_to_mask(np.array(masks))
 
+
         # check again if augmentation result is negative sample
         if (not is_negative_sample) and (self.transforms is not None):
             if len(augmented["bboxes"]) == 0:
@@ -194,13 +197,9 @@ class COCODataset(object):
         # masks
         if not is_negative_sample:  # positive target
             target["masks"] = to_uint8_tensor(masks)
-            target["mask"] = to_uint8_tensor(mask)
         else:  # negative target
             target["masks"] = torch.zeros(
                 0, image.shape[0], image.shape[1], dtype=torch.uint8
-            )
-            target["mask"] = torch.zeros(
-              0, image.shape[0], image.shape[1], dtype = torch.uint8
             )
 
         target["area"] = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
@@ -210,7 +209,7 @@ class COCODataset(object):
 
         # normalize image
         image = image / np.max(image)
-        return image_to_float_tensor(image), target['mask'] # target
+        return image_to_float_tensor(image), target # target
 
     def __len__(self):
         return len(self.images)
@@ -381,8 +380,6 @@ def test():
 
 
 def masks_to_mask(masks):
-  print("type:", type(masks))
-  print("shape:", masks.shape)
   if isinstance(masks, torch.Tensor):
     mask = masks.numpy().transpose(1,2,0).sum(axis=2).astype(np.int64)
   else: mask = masks.transpose(1,2,0).sum(axis=2).astype(np.int64)
