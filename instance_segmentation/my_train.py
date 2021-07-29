@@ -22,7 +22,7 @@ from model import *
 # configs_file_path = os.path.join(configs_path, 'default_config.yml')
 
 data_path = 'data' # os.path.join(parentdir, 'data')
-sperm_dataset_path = os.path.join(data_path, 'morphology_coco')
+sperm_dataset_path = os.path.join(data_path, 'mixed_coco')
 annotations_file_path = os.path.join(sperm_dataset_path, 'annotations.json')
 
 model_path = "model.pth"
@@ -54,7 +54,7 @@ def main():
     optimizer = torch.optim.SGD(params, lr = 0.005, momentum = 0.9, weight_decay = 0.0005)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = 4, gamma = 0.9)
 
-    num_epochs = 40
+    num_epochs = 70
     print("starting to train")
     for epoch in range(num_epochs):
         train_one_epoch(model, optimizer, train_data_loader, device, epoch, print_freq = 10)
